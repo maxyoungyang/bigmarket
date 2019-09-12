@@ -7,13 +7,14 @@ from bigmarket.models import BaseModel
 
 class User(AbstractUser):
     mobile = models.CharField(verbose_name='手机号', max_length=11, default='', null=True, blank=True)
-    alipay_openid = models.CharField('支付宝openid', max_length=60, default='', null=True, blank=True)
-    weixin_openid = models.CharField('微信openid', max_length=60, default='', null=True, blank=True)
-    weixin_web_openid = models.CharField('微信web用户openid', max_length=60, default='', null=True, blank=True)
-    baidu_openid = models.CharField('百度openid', max_length=60, default='', null=True, blank=True)
-    status = models.CharField('用户状态', default='0', choices=Choices.USER_STATUS_CHOICES, max_length=20)
-    token = models.CharField('口令字符串', max_length=60, default='')
-    user_level = models.PositiveIntegerField('用户等级', default=0)
+    alipay_openid = models.CharField(verbose_name='支付宝openid', max_length=60, default='', null=True, blank=True)
+    weixin_openid = models.CharField(verbose_name='微信openid', max_length=60, default='', null=True, blank=True)
+    weixin_web_openid = models.CharField(verbose_name='微信web用户openid', max_length=60, default='', null=True, blank=True)
+    baidu_openid = models.CharField(verbose_name='百度openid', max_length=60, default='', null=True, blank=True)
+    status = models.CharField(verbose_name='用户状态', default='0', choices=Choices.USER_STATUS_CHOICES, max_length=20)
+    token = models.CharField(verbose_name='口令字符串', max_length=254, default='')
+    user_level = models.CharField(verbose_name='用户等级', default='normal',
+                                  choices=Choices.USER_LEVEL_CHOICES, max_length=20)
 
     class Meta:
         db_table = 't_users'

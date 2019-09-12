@@ -81,6 +81,11 @@ class Choices(object):
         ('al', '限制全部功能'),
         ('frozen', '冻结'),
     ]
+    # 用户等级
+    USER_LEVEL_CHOICES = [
+        ('normal', '普通用户'),
+        ('vip', '高级用户'),
+    ]
     # 媒体类型
     MEDIA_TYPE_CHOICES = [
         ('image', '图片'),
@@ -100,12 +105,8 @@ class Choices(object):
     # 文章类型
     ARTICLE_TYPE_CHOICES = [
         ('detail', '图文详情'),
-        ('blog', '文章'),
-        ('public', '系统文档'),
-    ]
-    # 消息类型
-    MESSAGE_TYPE_CHOICES = [
         ('ad', '广告素材'),
-        ('note', '系统公告'),
+        ('blog', '文章'),
+        ('public', '系统公告'),
         ('message', '私信'),
     ]
