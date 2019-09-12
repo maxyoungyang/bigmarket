@@ -110,3 +110,9 @@ class Choices(object):
         ('public', '系统公告'),
         ('message', '私信'),
     ]
+    # 电子货币类型
+    CURRENCY_TYPE_CHOICES = [
+        ('balance', '余额'),
+        ('integral', '积分'),
+        ('financial', '理财'),
+    ]
