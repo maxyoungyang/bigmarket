@@ -3,6 +3,7 @@ from django.db import models
 from apps.user.models import User
 from bigmarket.models import BaseModel
 
+
 # 品牌
 class Brand(BaseModel):
     """
@@ -23,6 +24,26 @@ class Brand(BaseModel):
         verbose_name_plural = verbose_name
         ordering = ('-sort', '-add_time',)
         db_table = 't_brands'
+
+    def __str__(self):
+        return self.name
+
+
+# 商品分类
+class Category(BaseModel):
+    parent = models.ForeignKey('self', verbose_name='父级分类',
+                               on_delete=models.DO_NOTHING, db_column='pid', blank=True, null=True)
+    name = models.CharField(verbose_name='分类名称', max_length=30, default='')
+    vice_name = models.CharField(verbose_name='分类副标题', blank=True, null=True, max_length=100)
+    slogan = models.CharField(verbose_name='分类标语', blank=True, null=True, max_length=100)
+    bg_color = models.CharField(verbose_name='分类背景色', blank=True, null=True, max_length=10)
+    is_recommended = models.BooleanField(verbose_name='是否首页推荐', default=False)
+
+    class Meta:
+        verbose_name = '商品分类'
+        verbose_name_plural = verbose_name
+        db_table = 't_categories'
+        ordering = ('-sort', '-add_time',)
 
     def __str__(self):
         return self.name
