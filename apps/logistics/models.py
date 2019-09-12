@@ -5,69 +5,6 @@ from apps.user.models import User
 from bigmarket.models import BaseModel
 
 
-# 快递公司
-class LogisticsCompany(BaseModel):
-    """
-    快递公司模型
-    可以通过tracking_no_role定义该公司快递单号格式验证的正则规则
-    根据sort等级排序，等级相同时，按创建时间
-    """
-    name = models.CharField(verbose_name='公司名', default='', max_length=50)
-    website = models.CharField(verbose_name='网站', default='', max_length=200)
-    address = models.CharField(verbose_name='地址', default='', max_length=200)
-    tracking_no_role = models.CharField(verbose_name='单号验证规则', default='', max_length=100)
-    api_url = models.CharField(verbose_name='查询api', default='', max_length=200)
-    api_id = models.CharField(verbose_name='查询api登录id', default='', max_length=200)
-    api_token = models.CharField(verbose_name='查询api的token', default='', max_length=200)
-    api_key = models.CharField(verbose_name='查询api的key', default='', max_length=200)
-    api_callback = models.CharField(verbose_name='查询api的回调地址', default='', max_length=200)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = '快递公司'
-        verbose_name_plural = verbose_name
-        ordering = ('-sort', '-add_time',)
-        db_table = 't_logistics_companies'
-
-
-# 快递费设置分组 TODO
-class ExpressFeeGroup(BaseModel):
-    class Meta:
-        verbose_name = '快递费分组'
-        verbose_name_plural = verbose_name
-        ordering = ('-sort', '-add_time',)
-        db_table = 't_express_fee_groups'
-
-
-# 快递费设置记录 TODO
-class ExpressFeeRecord(BaseModel):
-    class Meta:
-        verbose_name = '快递费设置记录'
-        verbose_name_plural = verbose_name
-        ordering = ('-sort', '-add_time',)
-        db_table = 't_express_fee_records'
-
-
-# 快递单号 TODO
-class TrackingNumber(BaseModel):
-    class Meta:
-        verbose_name = '快递单号'
-        verbose_name_plural = verbose_name
-        ordering = ('-sort', '-add_time',)
-        db_table = 't_tracking_numbers'
-
-
-# 物流信息 TODO
-class TrackingRecord(BaseModel):
-    class Meta:
-        verbose_name = '追踪信息记录'
-        verbose_name_plural = verbose_name
-        ordering = ('-sort', '-add_time',)
-        db_table = 't_tracking_records'
-
-
 # 地区模型
 class Region(BaseModel):
     """
@@ -128,4 +65,88 @@ class ShippingInfo(BaseModel):
         verbose_name_plural = verbose_name
         ordering = ('-sort', '-add_time',)
         db_table = 't_shipping_infos'
+
+
+# 快递公司
+class LogisticsCompany(BaseModel):
+    """
+    快递公司模型
+    可以通过tracking_no_role定义该公司快递单号格式验证的正则规则
+    根据sort等级排序，等级相同时，按创建时间
+    """
+    name = models.CharField(verbose_name='公司名', default='', max_length=50)
+    website = models.CharField(verbose_name='网站', default='', max_length=200)
+    address = models.CharField(verbose_name='地址', default='', max_length=200)
+    tracking_no_role = models.CharField(verbose_name='单号验证规则', default='', max_length=100)
+    api_url = models.CharField(verbose_name='查询api', default='', max_length=200)
+    api_id = models.CharField(verbose_name='查询api登录id', default='', max_length=200)
+    api_token = models.CharField(verbose_name='查询api的token', default='', max_length=200)
+    api_key = models.CharField(verbose_name='查询api的key', default='', max_length=200)
+    api_callback = models.CharField(verbose_name='查询api的回调地址', default='', max_length=200)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = '快递公司'
+        verbose_name_plural = verbose_name
+        ordering = ('-sort', '-add_time',)
+        db_table = 't_logistics_companies'
+
+
+# 快递费设置分组
+class ExpressFeeGroup(BaseModel):
+    name = models.CharField(verbose_name='分组名称', default='', max_length=50)
+
+    class Meta:
+        verbose_name = '快递费分组'
+        verbose_name_plural = verbose_name
+        ordering = ('-sort', '-add_time',)
+        db_table = 't_express_fee_groups'
+
+
+# 快递费设置记录
+class ExpressFeeRecord(BaseModel):
+    group = models.ForeignKey(ExpressFeeGroup, verbose_name='所属快递费分组', default=1,
+                              on_delete=models.CASCADE, related_name='records')
+    region = models.ForeignKey(Region, verbose_name='地区', on_delete=models.CASCADE, default=1)
+    currency = models.CharField(verbose_name='计价币种', max_length=3, null=True, blank=True, default='CNY')
+    price_first = models.DecimalField(verbose_name='首重价格', max_digits=8, decimal_places=2, default=0)
+    price_continue = models.DecimalField(verbose_name='续重价格', max_digits=8, decimal_places=2, default=0)
+    weight_first = models.DecimalField(verbose_name='首重克数', max_digits=8, decimal_places=2, default=0)
+    weight_continue = models.DecimalField(verbose_name='续重克数', max_digits=8, decimal_places=2, default=0)
+
+    class Meta:
+        verbose_name = '快递费设置记录'
+        verbose_name_plural = verbose_name
+        ordering = ('-sort', '-add_time',)
+        db_table = 't_express_fee_records'
+
+
+# 快递单号
+class TrackingNumber(BaseModel):
+    LogisticsCompany = models.ForeignKey(LogisticsCompany, verbose_name='所属快递', default=1,
+                                         on_delete=models.DO_NOTHING, related_name='tracking_numbers')
+    obj_id = models.IntegerField(verbose_name='所属对象id', default=1)
+    number = models.CharField(verbose_name='单号', max_length=20, default='')
+
+    class Meta:
+        verbose_name = '快递单号'
+        verbose_name_plural = verbose_name
+        ordering = ('-sort', '-add_time',)
+        db_table = 't_tracking_numbers'
+
+
+# 物流信息
+class TrackingRecord(BaseModel):
+    tracking_number = models.ForeignKey(TrackingNumber, verbose_name='快递单号', default=1,
+                                        on_delete=models.CASCADE, related_name='tracking_records')
+    message = models.CharField(verbose_name='记录内容', max_length=100, default='')
+
+    class Meta:
+        verbose_name = '追踪信息记录'
+        verbose_name_plural = verbose_name
+        ordering = ('-sort', '-add_time',)
+        db_table = 't_tracking_records'
+
 

@@ -87,3 +87,22 @@ class Agent(BaseModel):
         ordering = ('-sort', '-add_time',)
         verbose_name = '代理'
         verbose_name_plural = verbose_name
+
+
+# 用户登录记录
+class LoginRecord(BaseModel):
+    """
+    用户登录记录
+    与users表是多对一的关系
+    login_time记录用户本次登录时间
+    login_ip记录用户本次登录ip地址
+    """
+    user = models.ForeignKey(User, verbose_name='登录用户', on_delete=models.CASCADE,
+                             related_name='login_records')
+    login_ip = models.GenericIPAddressField(verbose_name='用户此次登录的IP地址', default='')
+
+    class Meta:
+        verbose_name = '用户登录记录'
+        verbose_name_plural = verbose_name
+        db_table = 't_login_records'
+        ordering = ('-add_time',)
