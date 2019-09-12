@@ -45,6 +45,11 @@ INSTALLED_APPS = [
     'apps.user.apps.UserConfig',
     'apps.community.apps.CommunityConfig',
     'apps.product.apps.ProductConfig',
+    'apps.logistics.apps.LogisticsConfig',
+    'apps.pricing.apps.PricingConfig',
+    'apps.order.apps.OrderConfig',
+    'apps.payment.apps.PaymentConfig',
+    'apps.marketing.apps.MarketingConfig',
 ]
 
 MIDDLEWARE = [
