@@ -46,16 +46,6 @@ class UserProfile(BaseModel):
     referrer = models.ForeignKey('self', verbose_name='推荐人', related_name='team',
                                  on_delete=models.DO_NOTHING, null=True, blank=True)
 
-    # interacted_products = models.ManyToManyField(Product, verbose_name='互动过的商品', related_name='interacted_users',
-    #                                              through='InteractiveProduct', through_fields=('profile', 'product'))
-    # available_specs = models.ManyToManyField(Spec, verbose_name='销售产品的可售规格',
-    #                                          related_name='interacted_users', through='AvailableSpec',
-    #                                          through_fields=('profile', 'spec'))
-
-    # role = models.ForeignKey(Role, verbose_name='用户所属的角色组', related_name='members', default=0,
-    #     #                          on_delete=models.SET_DEFAULT)
-    #     # permissions = models.ManyToManyField(Permission, verbose_name='该用户的特许权限', related_name='users')
-
     class Meta:
         db_table = 't_user_profiles'
         ordering = ('-sort', '-add_time',)
@@ -67,3 +57,33 @@ class UserProfile(BaseModel):
             return self.nickname
         else:
             return self.user.mobile
+
+
+class AgentGroup(BaseModel):
+    supplier = models.ForeignKey(User, verbose_name='供应商', on_delete=models.DO_NOTHING)
+    name = models.CharField(verbose_name='代理分组名称', max_length=50, default='', null=True, blank=True)
+    desc = models.CharField(verbose_name='代理分组描述', max_length=200, default='', null=True, blank=True)
+
+    def __str__(self):
+        return self.supplier.mobile + ' - ' + self.name
+
+    class Meta:
+        db_table = 't_agent_groups'
+        ordering = ('-sort', '-add_time',)
+        verbose_name = '代理分组'
+        verbose_name_plural = verbose_name
+
+
+class Agent(BaseModel):
+    agent_group = models.ForeignKey(AgentGroup, verbose_name='所属分组', on_delete=models.DO_NOTHING)
+    supplier = models.ForeignKey(User, verbose_name='供应商', on_delete=models.DO_NOTHING, related_name='suppliers')
+    agent = models.ForeignKey(User, verbose_name='代理', on_delete=models.DO_NOTHING, related_name='agents')
+
+    def __str__(self):
+        return self.agent.mobile
+
+    class Meta:
+        db_table = 't_agents'
+        ordering = ('-sort', '-add_time',)
+        verbose_name = '代理'
+        verbose_name_plural = verbose_name

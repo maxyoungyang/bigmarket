@@ -116,3 +116,15 @@ class Choices(object):
         ('integral', '积分'),
         ('financial', '理财'),
     ]
+
+    INTERACTED_PRODUCT_TYPE_CHOICES = [
+        ('like', '点赞'),
+        ('fav', '收藏'),
+        ('sale', '销售'),
+        ('watched', '看过'),
+    ]
+    INTERACTED_CONTENT_TYPE_CHOICES = [
+        ('like', '点赞'),
+        ('fav', '收藏'),
+        ('watched', '看过'),
+    ]

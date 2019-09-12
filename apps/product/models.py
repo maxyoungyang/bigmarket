@@ -3,6 +3,7 @@ from django.db import models
 from apps.logistics.models import Region
 from apps.user.models import User
 from bigmarket.models import BaseModel
+from bigmarket.choices import Choices
 
 
 # 品牌
@@ -158,4 +159,39 @@ class InventoryHistory(BaseModel):
         verbose_name = '库存变化记录'
         verbose_name_plural = verbose_name
         db_table = 't_inventory_histories'
+        ordering = ('-add_time',)
+
+
+# 用户互动商品
+class InteractedProduct(BaseModel):
+    user = models.ForeignKey(User, verbose_name='所属用户',
+                             on_delete=models.DO_NOTHING, related_name='interacted_products')
+    product = models.ForeignKey(Product, verbose_name='相关商品',
+                                on_delete=models.DO_NOTHING, related_name='users')
+    type = models.CharField(verbose_name='行为', max_length=20, choices=Choices.INTERACTED_PRODUCT_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.product.name + ' - ' + self.user.mobile
+
+    class Meta:
+        verbose_name = '互动商品记录'
+        verbose_name_plural = verbose_name
+        db_table = 't_interacted_products'
+        ordering = ('-add_time',)
+
+
+# 用户在售规格
+class AvailableSpec(BaseModel):
+    user = models.ForeignKey(User, verbose_name='所属用户',
+                             on_delete=models.DO_NOTHING, related_name='available_specs')
+    spec = models.ForeignKey(Spec, verbose_name='相关规格',
+                             on_delete=models.DO_NOTHING, related_name='users')
+
+    def __str__(self):
+        return self.spec.name + ' - ' + self.user.mobile
+
+    class Meta:
+        verbose_name = '可售规格记录'
+        verbose_name_plural = verbose_name
+        db_table = 't_available_specs'
         ordering = ('-add_time',)

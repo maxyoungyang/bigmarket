@@ -70,3 +70,21 @@ class Media(BaseModel):
         verbose_name_plural = verbose_name
         db_table = 't_medias'
         ordering = ('-sort', '-add_time')
+
+
+# 用户互动内容
+class InteractedArticle(BaseModel):
+    user = models.ForeignKey(User, verbose_name='所属用户',
+                             on_delete=models.DO_NOTHING, related_name='interacted_articles')
+    article = models.ForeignKey(Articles, verbose_name='相关商品',
+                                on_delete=models.DO_NOTHING, related_name='users')
+    type = models.CharField(verbose_name='行为', max_length=20, choices=Choices.INTERACTED_CONTENT_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.article.title + ' - ' + self.user.mobile
+
+    class Meta:
+        verbose_name = '互动内容记录'
+        verbose_name_plural = verbose_name
+        db_table = 't_interacted_articles'
+        ordering = ('-add_time',)
