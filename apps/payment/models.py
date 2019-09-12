@@ -25,6 +25,8 @@ class PaymentMethod(BaseModel):
         return self.name
 
     class Meta:
+        verbose_name = '支付方式'
+        verbose_name_plural = verbose_name
         db_table = 't_payment_methods'
         ordering = ('-sort', '-add_time')
 
