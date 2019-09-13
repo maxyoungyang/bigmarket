@@ -1,4 +1,5 @@
 from django.db import models
+# from django.contrib.auth import get_user_model  # 获取setting中配置的user模型
 
 from apps.product.models import Spec, Product
 from apps.user.models import User
@@ -8,6 +9,7 @@ from apps.payment.models import PaymentMethod
 from bigmarket.models import BaseModel
 from bigmarket.choices import Choices
 
+# User = get_user_model()  # 获取setting中配置的user模型
 
 # 订单
 class Order(BaseModel):
@@ -16,7 +18,8 @@ class Order(BaseModel):
     """
     creator = models.ForeignKey(User, verbose_name='创建人',
                                 related_name='purchase_orders', on_delete=models.DO_NOTHING)
-    order_no = models.CharField(verbose_name='订单号', default='', max_length=30)
+    order_no = models.CharField(verbose_name='订单号', default='', max_length=30, unique=True)
+    trade_no = models.CharField(verbose_name='交易流水号', default='', max_length=30, unique=True)  # 配合三方支付回调时要保存这个值
     consignee = models.ForeignKey(ShippingInfo, verbose_name='收件人信息',
                                   related_name='be_consignee_orders', on_delete=models.DO_NOTHING)
     consignor = models.ForeignKey(ShippingInfo, verbose_name='发件人信息',
