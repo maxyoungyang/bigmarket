@@ -128,3 +128,12 @@ class Choices(object):
         ('fav', '收藏'),
         ('watched', '看过'),
     ]
+    PRODUCT_MEDIA_POSITION_CHOICES = [
+        ('cover', '封面'),
+        ('slider', '轮播图'),
+        ('detail', '详情'),
+    ]
+    SYSTEM_MEDIA_POSITION_CHOICES = [
+        ('logo', '标志'),
+        ('slider', '幻灯片'),
+    ]

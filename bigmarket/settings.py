@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',  # 解决跨域问题的app组件，要导入包 django-cors-headers
     'crispy_forms',
-    'xadmin.apps.XAdminConfig',
+    # 'extra_apps.xadmin.apps.XAdminConfig',
     # 以下为自定义app
     'apps.user.apps.UserConfig',
     'apps.community.apps.CommunityConfig',
@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.payment.apps.PaymentConfig',
     'apps.marketing.apps.MarketingConfig',
     'apps.finance.apps.FinanceConfig',
+    'apps.media.apps.MediaConfig',
 ]
 
 MIDDLEWARE = [
@@ -150,4 +151,4 @@ STATICFILES_DIRS = [
 ]
 
 MEDIA_URL = '/media/'  # 关于所有上传文件的访问路径前面都应加上这个路径前缀
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.path.join(BASE_DIR, "apps/media")

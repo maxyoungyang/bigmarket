@@ -4,6 +4,7 @@ from apps.logistics.models import Region
 from apps.user.models import User
 from bigmarket.models import BaseModel
 from bigmarket.choices import Choices
+from extra_apps.DjangoUeditor.models import UEditorField
 
 
 # 品牌
@@ -65,7 +66,9 @@ class Product(BaseModel):
     name = models.CharField(verbose_name='产品名称', max_length=80)
     item_no = models.CharField(verbose_name='货号', default='', max_length=30, blank=True, null=True)
     brief = models.CharField(verbose_name='产品简述', blank=True, null=True, max_length=160)
-    desc = models.TextField(verbose_name='产品描述', blank=True, null=True)
+    # 富文本编辑器的相关配置
+    desc = UEditorField(verbose_name='详情', blank=True, null=True, default='',
+                        imagePath='image/product', filePath='file/products', width=1000, height=400)
     is_id_needed = models.BooleanField(verbose_name='是否需要ID', default=False)
 
     place_origin = models.ForeignKey(Region, verbose_name='产地', on_delete=models.DO_NOTHING,
@@ -78,6 +81,8 @@ class Product(BaseModel):
     favorite_count = models.PositiveIntegerField(verbose_name='收藏次数', default=0)
 
     is_recommended = models.BooleanField('是否首页推荐', default=False)
+    is_new = models.BooleanField('是否新品', default=False)
+    is_hot = models.BooleanField('是否热销', default=False)
 
     def __str__(self):
         return self.name
@@ -101,6 +106,7 @@ class Spec(BaseModel):
                                on_delete=models.CASCADE, related_name='children', db_column='pid')
     name = models.CharField(verbose_name='规格名称', max_length=30)
     value = models.CharField(verbose_name='规格值', max_length=30)
+    is_free_shipping = models.BooleanField(verbose_name='是否包邮', default=True)
 
     class Meta:
         verbose_name = '商品规格'
