@@ -1,3 +1,6 @@
+"""
+用户模块 模型定义
+"""
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -6,7 +9,7 @@ from bigmarket.models import BaseModel
 
 
 class User(AbstractUser):
-    mobile = models.CharField(verbose_name='手机号', max_length=11, default='', null=True, blank=True)
+    mobile = models.CharField(verbose_name='手机号', max_length=18, default='', null=True, blank=True)
     alipay_openid = models.CharField(verbose_name='支付宝openid', max_length=60, default='', null=True, blank=True)
     weixin_openid = models.CharField(verbose_name='微信openid', max_length=60, default='', null=True, blank=True)
     weixin_web_openid = models.CharField(verbose_name='微信web用户openid', max_length=60, default='', null=True, blank=True)
@@ -105,4 +108,19 @@ class LoginRecord(BaseModel):
         verbose_name = '用户登录记录'
         verbose_name_plural = verbose_name
         db_table = 't_login_records'
+        ordering = ('-add_time',)
+
+
+# 登录验证码
+class VerifyCode(BaseModel):
+    """
+    短信验证码
+    """
+    code = models.CharField(verbose_name='验证码', max_length=10)
+    mobile = models.CharField(verbose_name='手机号', max_length=18, default='', null=True, blank=True)
+
+    class Meta:
+        verbose_name = '短信验证码'
+        verbose_name_plural = verbose_name
+        db_table = 't_verify_codes'
         ordering = ('-add_time',)

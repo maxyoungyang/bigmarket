@@ -1,3 +1,6 @@
+"""
+设置模块名称
+"""
 from django.apps import AppConfig
 
 
