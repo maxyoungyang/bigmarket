@@ -2,21 +2,8 @@ from django.db import models
 
 from apps.community.models import Articles
 from apps.product.models import Spec
-from bigmarket.models import BaseModel
+from bigmarket.models import BaseMedia
 from bigmarket.choices import Choices
-
-
-class BaseMedia(BaseModel):
-    title = models.CharField(verbose_name='标题', max_length=100)
-    brief = models.CharField(verbose_name='简述', blank=True, null=True, max_length=255)
-    filename = models.CharField(verbose_name='文件名', max_length=200)
-    type = models.CharField(verbose_name='媒体类型', max_length=10, choices=Choices.MEDIA_TYPE_CHOICES)
-
-    class Meta:
-        """
-        在Meta类中设置 abstract = True 则不会在数据库中生成表
-        """
-        abstract = True
 
 
 class ProductMedia(BaseMedia):

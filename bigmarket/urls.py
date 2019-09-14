@@ -15,12 +15,13 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.conf.urls import url
-from django.urls import path
+from django.urls import path, include
 import xadmin
 
 urlpatterns = [
     #    path('admin/', admin.site.urls),
     url(r'^admin/', xadmin.site.urls),
+    url(r'^api-auth/', include('rest_framework.urls')),
 
     #商品列表页
     # url(r'^goods/$', )

@@ -1,4 +1,5 @@
 from django.db import models
+from .choices import Choices
 
 
 class BaseModel(models.Model):
@@ -12,6 +13,19 @@ class BaseModel(models.Model):
     add_time = models.DateTimeField(verbose_name='添加时间', auto_now_add=True)
     update_time = models.DateTimeField(verbose_name='更新时间', auto_now=True)
     extends = models.TextField(verbose_name='扩展数据(json格式存储)', blank=True, null=True)
+
+    class Meta:
+        """
+        在Meta类中设置 abstract = True 则不会在数据库中生成表
+        """
+        abstract = True
+
+
+class BaseMedia(BaseModel):
+    title = models.CharField(verbose_name='标题', max_length=100)
+    brief = models.CharField(verbose_name='简述', blank=True, null=True, max_length=255)
+    filename = models.CharField(verbose_name='文件名', max_length=200)
+    type = models.CharField(verbose_name='媒体类型', max_length=10, choices=Choices.MEDIA_TYPE_CHOICES)
 
     class Meta:
         """
