@@ -59,7 +59,7 @@ class Product(BaseModel):
     先按照指定优先级降序排列
     再按照创建时间降序排列
     """
-    owner = models.ForeignKey(User, verbose_name='创建该产品的用户', on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, verbose_name='创建该产品的用户', on_delete=models.CASCADE, default=1)
     brand = models.ForeignKey(Brand, verbose_name='产品品牌', blank=True, null=True, default=0,
                               on_delete=models.DO_NOTHING)
     category = models.ManyToManyField(Category, verbose_name='产品所属分类', related_name='products')
@@ -76,9 +76,9 @@ class Product(BaseModel):
     place_delivery = models.ForeignKey(Region, verbose_name='发货地', on_delete=models.DO_NOTHING,
                                        related_name='delivery_products', db_column='delivery_id', blank=True, null=True)
 
-    access_count = models.PositiveIntegerField(verbose_name='浏览次数', default=0)
-    like_count = models.PositiveIntegerField(verbose_name='点赞次数', default=0)
-    favorite_count = models.PositiveIntegerField(verbose_name='收藏次数', default=0)
+    access_count = models.IntegerField(verbose_name='浏览次数', default=0)
+    like_count = models.IntegerField(verbose_name='点赞次数', default=0)
+    favorite_count = models.IntegerField(verbose_name='收藏次数', default=0)
 
     is_recommended = models.BooleanField('是否首页推荐', default=False)
     is_new = models.BooleanField('是否新品', default=False)
@@ -174,7 +174,7 @@ class InteractedProduct(BaseModel):
                              on_delete=models.DO_NOTHING, related_name='interacted_products')
     product = models.ForeignKey(Product, verbose_name='相关商品',
                                 on_delete=models.DO_NOTHING, related_name='users')
-    type = models.CharField(verbose_name='行为', max_length=20, choices=Choices.INTERACTED_PRODUCT_TYPE_CHOICES)
+    type = models.CharField(verbose_name='行为', max_length=20, choices=Choices.INTERACTED_TYPE_CHOICES)
 
     def __str__(self):
         return self.product.name + ' - ' + self.user.mobile
@@ -183,6 +183,24 @@ class InteractedProduct(BaseModel):
         verbose_name = '互动商品记录'
         verbose_name_plural = verbose_name
         db_table = 't_interacted_products'
+        ordering = ('-add_time',)
+
+
+# 用户商品销售模式
+class ProductSalesType(BaseModel):
+    user = models.ForeignKey(User, verbose_name='所属用户',
+                             on_delete=models.DO_NOTHING, related_name='sales_products')
+    product = models.ForeignKey(Product, verbose_name='相关商品',
+                                on_delete=models.DO_NOTHING, related_name='sales')
+    type = models.CharField(verbose_name='行为', max_length=20, choices=Choices.SALES_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.product.name + ' - ' + self.user.mobile + ' - ' + self.type
+
+    class Meta:
+        verbose_name = '用户商品销售模式'
+        verbose_name_plural = verbose_name
+        db_table = 't_sales_types'
         ordering = ('-add_time',)
 
 

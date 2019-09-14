@@ -2,8 +2,8 @@
 
 __author__ = 'bobby'
 
-from extra_apps import xadmin
-from extra_apps.xadmin.views import BaseAdminPlugin, CreateAdminView, UpdateAdminView
+import xadmin
+from xadmin import BaseAdminPlugin, CreateAdminView, UpdateAdminView
 from extra_apps.DjangoUeditor import UEditorField
 from extra_apps.DjangoUeditor import UEditorWidget
 from django.conf import settings

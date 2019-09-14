@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',  # 解决跨域问题的app组件，要导入包 django-cors-headers
     'crispy_forms',
-    # 'extra_apps.xadmin.apps.XAdminConfig',
+    'xadmin.apps.XAdminConfig',
     # 以下为自定义app
     'apps.user.apps.UserConfig',
     'apps.community.apps.CommunityConfig',
