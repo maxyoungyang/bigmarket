@@ -34,8 +34,10 @@ class Brand(BaseModel):
 
 # 商品分类
 class Category(BaseModel):
+    creator = models.ForeignKey(User, verbose_name='创建用户', null=True, blank=True, on_delete=models.DO_NOTHING)
     parent = models.ForeignKey('self', verbose_name='父级分类',
                                on_delete=models.DO_NOTHING, db_column='pid', blank=True, null=True)
+    level = models.PositiveIntegerField(verbose_name='分类等级', default=1)
     name = models.CharField(verbose_name='分类名称', max_length=30, default='')
     vice_name = models.CharField(verbose_name='分类副标题', blank=True, null=True, max_length=100)
     slogan = models.CharField(verbose_name='分类标语', blank=True, null=True, max_length=100)
@@ -60,7 +62,7 @@ class Product(BaseModel):
     再按照创建时间降序排列
     """
     creator = models.ForeignKey(User, verbose_name='创建该产品的用户', on_delete=models.CASCADE, default=1)
-    brand = models.ForeignKey(Brand, verbose_name='产品品牌', blank=True, null=True, default=0,
+    brand = models.ForeignKey(Brand, verbose_name='产品品牌', blank=True, null=True,
                               on_delete=models.DO_NOTHING)
     category = models.ManyToManyField(Category, verbose_name='产品所属分类', related_name='products')
     name = models.CharField(verbose_name='产品名称', max_length=80)

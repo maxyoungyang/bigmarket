@@ -16,13 +16,23 @@ Including another URLconf
 # from django.contrib import admin
 from django.conf.urls import url
 from django.urls import path, include
+
 import xadmin
+
+from apps.logistics.views import InitialRegionView
+from apps.product.views import InitialCategoryView
 
 urlpatterns = [
     #    path('admin/', admin.site.urls),
     url(r'^admin/', xadmin.site.urls),
     url(r'^api-auth/', include('rest_framework.urls')),
 
-    #商品列表页
+    # 商品列表页
     # url(r'^goods/$', )
+
+    # 物流管理
+    url(r'^logistics/region/initial', InitialRegionView.as_view()),
+
+    # 商品管理
+    url(r'^products/categories/initial', InitialCategoryView.as_view()),
 ]

@@ -13,7 +13,7 @@ class Region(BaseModel):
     如果没有父级地区，则parent_id = 0
     先按等级再按名称排序
     """
-    parent = models.ForeignKey('self', verbose_name='父级地区',
+    parent = models.ForeignKey('self', verbose_name='父级地区', null=True, blank=True,
                                on_delete=models.CASCADE, db_column='parent_id', related_name='jurisdictions')
     name = models.CharField(verbose_name='地区名称', max_length=255, default='')
     level = models.PositiveIntegerField(verbose_name='级别类型 1:国家, 2:省, 3:市, 4:区县, 5:街道, 9:其他')
