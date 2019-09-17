@@ -1,6 +1,7 @@
 """ 定价模块 """
 from django.db import models
 
+from apps.logistics.models import ExpressFeeGroup
 from apps.product.models import Spec
 from apps.user.models import AgentGroup
 from bigmarket.models import BaseModel
@@ -27,6 +28,11 @@ class Pricing(BaseModel):
 
     agent_group = models.ForeignKey(AgentGroup, verbose_name='所属分组',
                                     on_delete=models.DO_NOTHING, related_name='pricing_set')
+
+    is_free_shipping = models.BooleanField(verbose_name='是否包邮', default=True)
+
+    express_fee_group = models.ForeignKey(ExpressFeeGroup, verbose_name='快递费模板',
+                                          on_delete=models.DO_NOTHING, null=True, blank=True, related_name='pricing')
 
     class Meta:
         verbose_name = '定价'

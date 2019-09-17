@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from apps.logistics.models import Region
 from apps.pricing.models import Pricing
 from apps.product.models import Category, Product, Spec, Brand, SpecDetail
+from bigmarket.commonutils import get_xls_table
 from .util import Utils
 
 
@@ -71,13 +72,7 @@ class ImportProductsView(APIView):
     批量导入商品数据
     """
     def get(self, request):
-        ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-        print(ROOT_DIR)
-        file = ROOT_DIR + '\\initial_data\\init_product.xls'
-        print(file)
-        # """
-        wb = xlrd.open_workbook(filename=file)  # 打开文件
-        table = wb.sheet_by_index(0)  # 取第一张工作簿
+        table = get_xls_table('\\initial_data\\init_product.xls')
         rows_count = table.nrows  # 取总行数
 
         errors_dict = {}
@@ -183,11 +178,7 @@ class ImportProductsView(APIView):
                 spec.value = 'default'
                 spec.spec_no = 'default'
 
-            if int(row_data[25]) == 1:
-                spec.is_free_shipping = True
-            else:
-                spec.is_free_shipping = False
-            # todo
+
             spec.save()
 
             # 创建规格详情
@@ -196,9 +187,14 @@ class ImportProductsView(APIView):
             # todo
             spec_detail.save()
 
-            # 创建定价
+            # ***创建该规格的定价***
             pricing = Pricing()
             pricing.spec = spec
+            # 该定价是否包邮
+            if int(row_data[25]) == 1:
+                pricing.is_free_shipping = True
+            else:
+                pricing.is_free_shipping = False
             # todo
             pricing.save()
 

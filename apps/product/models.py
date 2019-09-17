@@ -111,7 +111,6 @@ class Spec(BaseModel):
     name = models.CharField(verbose_name='规格名称', max_length=30)
     value = models.CharField(verbose_name='规格值', max_length=30)
     spec_no = models.CharField(verbose_name='规格编码', default='', max_length=30, blank=True, null=True)
-    is_free_shipping = models.BooleanField(verbose_name='是否包邮', default=True)
 
     class Meta:
         verbose_name = '商品规格'
