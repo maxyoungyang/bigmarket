@@ -21,7 +21,7 @@ from django.views.static import serve  # django访问静态文件的方法
 import xadmin
 
 from apps.logistics.views import InitialRegionView
-from apps.product.views import InitialCategoryView
+from apps.product.views import InitialCategoryView, ImportProductsView
 
 from bigmarket.settings import MEDIA_ROOT
 
@@ -41,4 +41,5 @@ urlpatterns = [
 
     # 商品管理
     url(r'^products/categories/initial', InitialCategoryView.as_view()),
+    url(r'^products/initial', ImportProductsView.as_view()),
 ]
