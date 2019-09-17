@@ -25,6 +25,9 @@ class Region(BaseModel):
         ordering = ('-sort', '-add_time',)
         db_table = 't_regions'
 
+    def __str__(self):
+        return self.name
+
 
 # 物流信息
 class ShippingInfo(BaseModel):

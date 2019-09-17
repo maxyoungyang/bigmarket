@@ -18,6 +18,8 @@ class Brand(BaseModel):
     name = models.CharField(verbose_name='名称', max_length=30)
     letter = models.CharField(verbose_name='名称拼写', max_length=30, blank=True, null=True)
     desc = models.TextField(verbose_name='描述', blank=True, null=True)
+    logo = models.ImageField(upload_to='image/brand/logo', default='logo_default.jpg',
+                             max_length=200, null=True, blank=True)
     slogan = models.CharField(verbose_name='标语', blank=True, null=True, max_length=80)
     bg_color = models.CharField(verbose_name='背景色', blank=True, null=True, max_length=30)
     is_recommended = models.BooleanField(verbose_name='是否首页推荐', default=False)
@@ -41,6 +43,8 @@ class Category(BaseModel):
     name = models.CharField(verbose_name='分类名称', max_length=30, default='')
     vice_name = models.CharField(verbose_name='分类副标题', blank=True, null=True, max_length=100)
     slogan = models.CharField(verbose_name='分类标语', blank=True, null=True, max_length=100)
+    icon = models.ImageField(upload_to='image/category/icon', default='category_icon_default.jpg',
+                             max_length=200, null=True, blank=True)
     bg_color = models.CharField(verbose_name='分类背景色', blank=True, null=True, max_length=10)
     is_recommended = models.BooleanField(verbose_name='是否首页推荐', default=False)
 
@@ -61,13 +65,13 @@ class Product(BaseModel):
     先按照指定优先级降序排列
     再按照创建时间降序排列
     """
-    creator = models.ForeignKey(User, verbose_name='创建该产品的用户', on_delete=models.CASCADE, default=1)
-    brand = models.ForeignKey(Brand, verbose_name='产品品牌', blank=True, null=True,
+    creator = models.ForeignKey(User, verbose_name='创建用户', on_delete=models.CASCADE, default=1)
+    brand = models.ForeignKey(Brand, verbose_name='品牌', blank=True, null=True,
                               on_delete=models.DO_NOTHING)
-    category = models.ManyToManyField(Category, verbose_name='产品所属分类', related_name='products')
-    name = models.CharField(verbose_name='产品名称', max_length=80)
+    category = models.ManyToManyField(Category, verbose_name='所属分类', related_name='products')
+    name = models.CharField(verbose_name='商品名称', max_length=80)
     item_no = models.CharField(verbose_name='货号', default='', max_length=30, blank=True, null=True)
-    brief = models.CharField(verbose_name='产品简述', blank=True, null=True, max_length=160)
+    brief = models.CharField(verbose_name='商品简述', blank=True, null=True, max_length=160)
     # 富文本编辑器的相关配置
     desc = UEditorField(verbose_name='详情', blank=True, null=True, default='',
                         imagePath='image/product', filePath='file/products', width=1000, height=400)
@@ -104,10 +108,9 @@ class Spec(BaseModel):
     再按照创建时间降序排列
     """
     product = models.ForeignKey(Product, verbose_name='所属产品', on_delete=models.CASCADE, related_name='specs')
-    parent = models.ForeignKey('self', verbose_name='父级规格',
-                               on_delete=models.CASCADE, related_name='children', db_column='pid')
     name = models.CharField(verbose_name='规格名称', max_length=30)
     value = models.CharField(verbose_name='规格值', max_length=30)
+    spec_no = models.CharField(verbose_name='规格编码', default='', max_length=30, blank=True, null=True)
     is_free_shipping = models.BooleanField(verbose_name='是否包邮', default=True)
 
     class Meta:
@@ -134,8 +137,8 @@ class SpecDetail(BaseModel):
     sku = models.CharField(verbose_name='规格编码', max_length=80, default='', blank=True, null=True)
     barcode = models.CharField(verbose_name='条形码', max_length=80, default='', blank=True, null=True)
 
-    min_quantity = models.IntegerField(verbose_name='最小可购买数量', default=0)
-    max_quantity = models.IntegerField(verbose_name='最大可购买数量', default=0)
+    min_quantity = models.IntegerField(verbose_name='最小可购买数量', default=0, null=True, blank=True)
+    max_quantity = models.IntegerField(verbose_name='最大可购买数量', default=0, null=True, blank=True)
 
     inventory = models.IntegerField(verbose_name='库存数量', default=0)
     is_deduction_inventory = models.BooleanField(verbose_name='是否扣减库存', default=False)

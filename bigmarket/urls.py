@@ -16,16 +16,22 @@ Including another URLconf
 # from django.contrib import admin
 from django.conf.urls import url
 from django.urls import path, include
+from django.views.static import serve  # django访问静态文件的方法
 
 import xadmin
 
 from apps.logistics.views import InitialRegionView
 from apps.product.views import InitialCategoryView
 
+from bigmarket.settings import MEDIA_ROOT
+
 urlpatterns = [
     #    path('admin/', admin.site.urls),
     url(r'^admin/', xadmin.site.urls),
     url(r'^api-auth/', include('rest_framework.urls')),
+
+    # 配置上传文件的访问url
+    url(r'^medias/(?P<path>.*)$', serve, {'document_root': MEDIA_ROOT}),
 
     # 商品列表页
     # url(r'^goods/$', )

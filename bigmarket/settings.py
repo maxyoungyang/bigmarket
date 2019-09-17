@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',  # 将静态媒体的保存路径通过注入到上下文中
             ],
         },
     },
@@ -150,5 +151,8 @@ STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, 'apps/course/static')  # 例如
 ]
 
-MEDIA_URL = '/media/'  # 关于所有上传文件的访问路径前面都应加上这个路径前缀
-MEDIA_ROOT = os.path.join(BASE_DIR, "apps/media")
+MEDIA_URL = '/medias/'  # 关于所有上传文件的访问路径前面都应加上这个路径前缀
+MEDIA_ROOT = os.path.join(BASE_DIR, "medias")
+
+# 用户TOKEN的有效时间（秒）
+USER_TOKEN_DURATION = 7200

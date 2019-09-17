@@ -15,7 +15,7 @@ class User(AbstractUser):
     weixin_web_openid = models.CharField(verbose_name='微信web用户openid', max_length=60, default='', null=True, blank=True)
     baidu_openid = models.CharField(verbose_name='百度openid', max_length=60, default='', null=True, blank=True)
     status = models.CharField(verbose_name='用户状态', default='0', choices=Choices.USER_STATUS_CHOICES, max_length=20)
-    token = models.CharField(verbose_name='口令字符串', max_length=254, default='')
+    token = models.CharField(verbose_name='口令字符串', max_length=254, default='', null=True, blank=True)
     user_level = models.CharField(verbose_name='用户等级', default='normal',
                                   choices=Choices.USER_LEVEL_CHOICES, max_length=20)
 

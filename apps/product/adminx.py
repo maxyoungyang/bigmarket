@@ -7,7 +7,7 @@ from .models import Brand, Category, Product, Spec, SpecDetail, InventoryHistory
 # 需要import要管理的model类
 
 class BrandAdmin(object):
-    list_display = ['creator', 'name', 'letter', 'is_recommended']  # 列表页中要显示的字段
+    list_display = ['id', 'creator', 'name', 'letter', 'is_recommended']  # 列表页中要显示的字段
     search_fields = ['name', 'letter']  # 支持查找的字段（可以模糊查找）
     list_filter = ['creator', 'name', 'letter', 'is_recommended']  # 可以使用过滤器的字段
     list_editable = ['is_recommended']  # 可以在列表页中编辑的字段
@@ -16,14 +16,15 @@ class BrandAdmin(object):
 xadmin.site.register(Brand, BrandAdmin)
 
 
-# class CategoryAdmin(object):
-#     # list_display = ['', ]  # 列表页中要显示的字段
-#     # search_fields = ['', ]  # 支持查找的字段（可以模糊查找）
-#     # list_filter = ['', ]  # 可以使用过滤器的字段
-#     # list_editable = ['', ]  # 可以在列表页中编辑的字段
-#
-# # 模型注册，第一个参数为模型对象，第二个参数是上面编写好的管理器类
-# xadmin.site.register(Category, CategoryAdmin)
+class CategoryAdmin(object):
+    list_display = ['id', 'creator', 'level', 'name', 'is_recommended', 'is_enable']  # 列表页中要显示的字段
+    search_fields = ['level', 'name']  # 支持查找的字段（可以模糊查找）
+    list_filter = ['creator', 'level', 'parent', 'add_time', 'update_time']  # 可以使用过滤器的字段
+    list_editable = ['name', 'is_recommended', 'is_enable']  # 可以在列表页中编辑的字段
+
+
+# 模型注册，第一个参数为模型对象，第二个参数是上面编写好的管理器类
+xadmin.site.register(Category, CategoryAdmin)
 #
 #
 # class ProductAdmin(object):
