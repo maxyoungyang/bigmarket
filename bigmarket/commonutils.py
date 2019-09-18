@@ -12,7 +12,7 @@ def get_xls_table(filepath):
     table = wb.sheet_by_index(0)  # 取第一张工作簿
     return table
 
-def content_is_number(content):
+def is_number(content):
     if content is None or content != '':
         return False
     else:
@@ -22,8 +22,9 @@ def content_is_number(content):
         except ValueError:
             return False
 
-def cell_has_content(cell_content):
+
+def is_empty(cell_content):
     if cell_content is not None and cell_content != '':
-        return True
-    else:
         return False
+    else:
+        return True

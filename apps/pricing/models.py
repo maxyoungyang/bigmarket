@@ -45,7 +45,7 @@ class TieredPricing(BaseModel):
     """
     阶梯价格模型
     """
-    price = models.ForeignKey(Pricing, verbose_name='隶属价格体系',
+    pricing = models.ForeignKey(Pricing, verbose_name='隶属价格体系',
                               related_name='tiered_pricing', on_delete=models.DO_NOTHING)
 
     class Meta:

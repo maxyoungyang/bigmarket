@@ -108,8 +108,7 @@ class Spec(BaseModel):
     再按照创建时间降序排列
     """
     product = models.ForeignKey(Product, verbose_name='所属产品', on_delete=models.CASCADE, related_name='specs')
-    name = models.CharField(verbose_name='规格名称', max_length=30)
-    value = models.CharField(verbose_name='规格值', max_length=30)
+    items = models.CharField(verbose_name='规格键值对', max_length=200, default='')
     spec_no = models.CharField(verbose_name='规格编码', default='', max_length=30, blank=True, null=True)
 
     class Meta:
@@ -162,7 +161,7 @@ class InventoryHistory(BaseModel):
     creator = models.ForeignKey(User, verbose_name='引起库存变更的用户', on_delete=models.DO_NOTHING)
 
     def __str__(self):
-        return self.spec.product.name + ' - ' + self.spec.name + ' - '\
+        return self.spec.product.name + ' - ' + str(self.spec.id) + ' - '\
                + str(self.change) + ' - ' + str(self.current_inventory)
 
     class Meta:
@@ -216,7 +215,7 @@ class AvailableSpec(BaseModel):
                              on_delete=models.DO_NOTHING, related_name='users')
 
     def __str__(self):
-        return self.spec.name + ' - ' + self.user.mobile
+        return ''
 
     class Meta:
         verbose_name = '可售规格记录'

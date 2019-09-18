@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import xlrd
 from rest_framework.views import APIView
 from apps.product.models import Category
-from .util import Utils
+from apps.product.utils import import_multi_products
 
 
 class InitialCategoryView(APIView):
@@ -68,5 +68,5 @@ class ImportProductsView(APIView):
     批量导入商品数据
     """
     def get(self, request):
-        Utils.import_multi_products('\\initial_data\\initial_products.xls')
+        import_multi_products('\\initial_data\\initial_products.xls')
         return HttpResponse(request)
