@@ -1,9 +1,12 @@
+import math
+
 import hashlib
 import time
 
 from apps.logistics.models import Region
 from apps.pricing.utils import make_pricing
-from apps.product.models import Category, Product, Spec, Brand, SpecDetail, ProductSalesType
+from apps.product.models import Category, Product, Spec, Brand, SpecDetail, ProductSalesType, ProductCategory, \
+    AvailableSpec
 from apps.user.models import User
 from bigmarket.commonutils import get_xls_table, is_empty, is_number
 
@@ -16,8 +19,9 @@ def create_brand(user, name):
     return brand
 
 
-def create_category(parent_category, name):
+def create_category(creator, parent_category, name):
     category = Category()
+    category.creator = creator
     category.name = name
     category.parent = parent_category
     if parent_category:
@@ -33,9 +37,66 @@ def create_category(parent_category, name):
     return category
 
 
+def make_product_category(product,
+                          category=None,
+                          first_category_name='',
+                          second_category_name='',
+                          third_category_name=''):
+    pc = ProductCategory()
+    pc.product = product
+    if category is not None:
+        pass
+    else:
+        # 设定商品分类，如果商品分类未创建，则创建分类，必须一级，二级，三级分类都有数据，否则被归入创建该商品的用户的系统默认分类
+        if third_category_name is not None and third_category_name != '':  # 如果输入的商品三级分类名不是空字符串
+            third_category_set = Category.objects.filter(name__exact=third_category_name)
+            if len(third_category_set) > 0:  # 如果三级分类已存在
+                category = third_category_set[0]
+            else:
+                if second_category_name is not None and second_category_name != '':
+                    second_category_set = Category.objects.filter(name__exact=second_category_name)
+                    if len(second_category_set) > 0:  # 如果二级分类已存在，则创建新的三级分类，并将产品分类设置为这个新的三级分类
+                        category = create_category(product.creator, second_category_set[0], third_category_name)
+                    else:  # 如果二级分类不存在，则查看一级分类
+                        if first_category_name is not None and first_category_name != '':
+                            first_category_set = Category.objects.filter(name__exact=first_category_name)
+                            if len(first_category_set) > 0:
+                                second_category = create_category(product.creator, first_category_set[0], second_category_name)
+                                third_category = create_category(product.creator, second_category, third_category_name)
+                                category = third_category
+                            else:
+                                first_category = create_category(product.creator, None, first_category_name)
+                                second_category = create_category(product.creator, first_category, second_category_name)
+                                third_category = create_category(product.creator, second_category, third_category_name)
+                                category = third_category
+                        else:
+                            error_message = "商品分类必须完整填写三个等级的分类名称，不确定可以不填"
+                            return error_message
+                else:
+                    error_message = "商品分类必须完整填写三个等级的分类名称，不确定可以不填"
+                    return error_message
+        else:
+            third_category_set = Category.objects.filter(creator=product.creator, name='默认三级', level=3)
+            if len(third_category_set) > 0:
+                category = third_category_set[0]
+            else:
+                first_default_category = Category()
+                first_default_category.creator = product.creator
+                first_default_category.level = 1
+                first_default_category.name = '默认一级'
+                first_default_category.parent = None
+                first_default_category.save()
+                second_default_category = create_category(product.creator, first_default_category, '默认二级')
+                category = create_category(product.creator, second_default_category, '默认三级')
+    pc.category = category
+    pc.sort = 0
+    pc.is_delete = False
+    pc.is_enable = True
+    return pc
+
+
 def make_product(creator, name='', brief='', item_no='',
-                 first_category_name='', second_category_name='', third_category_name='',
-                 brand_name='', place_origin='', place_delivery='',
+                 brand_id=0, place_origin='', place_delivery='',
                  is_id_needed=False, desc=''):
     product = Product()
 
@@ -64,64 +125,20 @@ def make_product(creator, name='', brief='', item_no='',
     else:
         product.item_no = item_no
 
-    # 设定商品分类，如果商品分类未创建，则创建分类，必须一级，二级，三级分类都有数据，否则被归入创建该商品的用户的系统默认分类
-    if third_category_name is not None and third_category_name != '':  # 如果输入的商品三级分类名不是空字符串
-        third_category_set = Category.objects.filter(name__exact=third_category_name)
-        if third_category_set:  # 如果三级分类已存在
-            product.category = third_category_set[0]
-        else:
-            if second_category_name is not None and second_category_name != '':
-                second_category_set = Category.objects.filter(name__exact=second_category_name)
-                if second_category_set:  # 如果二级分类已存在，则创建新的三级分类，并将产品分类设置为这个新的三级分类
-                    product.category = create_category(second_category_set[0], third_category_name)
-                else:  # 如果二级分类不存在，则查看一级分类
-                    if first_category_name is not None and first_category_name != '':
-                        first_category_set = Category.objects.filter(name__exact=first_category_name)
-                        if first_category_set:
-                            second_category = create_category(first_category_set[0], second_category_name)
-                            third_category = create_category(second_category, third_category_name)
-                            product.category = third_category
-                        else:
-                            first_category = create_category(None, first_category_name)
-                            second_category = create_category(first_category, second_category_name)
-                            third_category = create_category(second_category, third_category_name)
-                            product.category = third_category
-                    else:
-                        error_message = "商品分类必须完整填写三个等级的分类名称，不确定可以不填"
-                        return error_message
-            else:
-                error_message = "商品分类必须完整填写三个等级的分类名称，不确定可以不填"
-                return error_message
-    else:
-        third_category_set = Category.objects.filter(creator=product.creator, name='默认三级', level=3)
-        if third_category_set:
-            product.category = third_category_set[0]
-        else:
-            first_default_category = Category()
-            first_default_category.creator = product.creator
-            first_default_category.level = 1
-            first_default_category.name = '默认一级'
-            first_default_category.parent = None
-            first_default_category.save()
-            second_default_category = create_category(first_default_category, '默认二级')
-            product.category = create_category(second_default_category, '默认三级')
-
-    if brand_name is not None and brand_name != '':
-        brand_set = Brand.objects.filter(name=brand_name)
-        if brand_set:
+    if brand_id is not None and brand_id != 0:
+        brand_set = Brand.objects.filter(id=brand_id)
+        if len(brand_set) > 0:
             product.brand = brand_set[0]
         else:
-            product.brand = create_brand(creator, brand_name)
-    else:
-        product.brand = None
+            product.brand = None
 
     # 设置原产地和发货地
-    if Region.objects.filter(name__exact=place_origin):
+    if len(Region.objects.filter(name__exact=place_origin)) > 0:
         product.place_origin = Region.objects.filter(name__exact=place_origin)[0]
     else:
         product.place_origin = None
 
-    if Region.objects.filter(name__exact=place_delivery):
+    if len(Region.objects.filter(name__exact=place_delivery)) > 0:
         product.place_delivery = Region.objects.filter(name__exact=place_delivery)[0]
     else:
         product.place_delivery = None
@@ -138,7 +155,6 @@ def make_product(creator, name='', brief='', item_no='',
     product.sort = 0
     product.is_delete = False
     product.is_enable = True
-    product.delete_time = None
 
     return product
 
@@ -152,7 +168,7 @@ def make_spec(product, items=None, spec_no=''):
     else:
         spec.items = items
 
-    if spec_no is None or spec_no == '' or Spec.objects.filter(spec_no=spec_no):
+    if spec_no is None or spec_no == '' or len(Spec.objects.filter(spec_no=spec_no)) > 0:
         spec_count = Spec.objects.filter(product=product).count()
         spec.spec_no = product.item_no + '-' + str(spec_count + 1)
     else:
@@ -189,6 +205,13 @@ def make_spec_detail(spec,
     return spec_detail
 
 
+def make_available_spec(user, spec):
+    available_spec = AvailableSpec()
+    available_spec.user = user
+    available_spec.spec = spec
+    return available_spec
+
+
 def make_product_salse_type(user, product, is_wholesale=True, is_retail=True):
     product_sales_type = ProductSalesType()
     product_sales_type.user = user
@@ -206,7 +229,6 @@ def make_product_salse_type(user, product, is_wholesale=True, is_retail=True):
     return product_sales_type
 
 
-
 def import_multi_products(filepath):
     table = get_xls_table(filepath)
     rows_count = table.nrows  # 取总行数
@@ -217,7 +239,8 @@ def import_multi_products(filepath):
         row_data = table.row_values(row_index)
 
         # *** 先检测必填项 ***
-        if row_data[0] is None or row_data[0] == '' or '.' in str(row_data[0]) or float(row_data[0]) < 1:
+        if row_data[0] is None or row_data[0] == '' or is_number(row_data[0]) \
+                is False or math.modf(float(row_data[0]))[0] > 0 or float(row_data[0]) < 1:
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第A列，创建用户ID不正确".format(row_index=row_index)
             continue
@@ -225,57 +248,35 @@ def import_multi_products(filepath):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第B列，标题名称为必填项，未填写".format(row_index=row_index)
             continue
-        if row_data[8] is None or row_data[8] == '':
-            errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第I列，发货地为必填项，未填写".format(row_index=row_index)
-            continue
-        if int(row_data[9]) != 0 and int(row_data[9]) != 1:
+        if is_number(row_data[9]) is False or (float(row_data[9]) != 0 and float(row_data[9]) != 1):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第G列，必填且只能填写0或者1,0代表不需要，1代表需要".format(row_index=row_index)
             continue
-        if row_data[18].strip().upper() not in 'CNY CNH CAD USD AUD NZD EUR JPY GBP HKD KRW':
+        if row_data[19] is None or row_data[19] == '' or row_data[19].strip().upper() not in \
+                'CNY CNH CAD USD AUD NZD EUR JPY GBP HKD KRW' or str(row_data[19].strip()).__len__() != 3:
             errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第S列，商品计价币种填写错误".format(row_index=row_index)
-
-        if is_number(row_data[20]) is False:
-            errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第U列，至少需要设置一个正确价格".format(row_index=row_index)
+                "第{row_index}行导入失败，原因：第T列，商品计价币种填写错误".format(row_index=row_index)
             continue
 
-        if float(row_data[27]) != 0 and float(row_data[27]) != 1:
+        if is_number(row_data[21]) is False or float(row_data[21]) < 0:
             errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第AB列，只能填写0或者1,0代表不包邮，1代表包邮".format(row_index=row_index)
+                "第{row_index}行导入失败，原因：第V列，至少需要设置正确的价格1".format(row_index=row_index)
             continue
 
-        if float(row_data[41]) != 0 and float(row_data[41]) != 1:
+        if is_number(row_data[28]) is False or (float(row_data[28]) != 0 and float(row_data[28]) != 1):
             errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第AP列，只能填写0或者1,0代表不供货，1代表供货（代发批发）".format(row_index=row_index)
+                "第{row_index}行导入失败，原因：第AC列，只能填写0或者1,0代表不包邮，1代表包邮".format(row_index=row_index)
             continue
-        if float(row_data[42]) != 0 and float(row_data[42]) != 1:
-            errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第AQ列，只能填写0或者1,0代表不零售，1代表零售".format(row_index=row_index)
-            continue
-
-        if float(row_data[41]) == 0 and float(row_data[42]) == 0:
-            errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第AP,AQ列，不能同时为0".format(row_index=row_index)
-            continue
-
-        if float(row_data[42]) == 0:
-            if is_number(row_data[26]) is False or float(row_data[26]) <= 0:
-                errors_dict["message" + str(row_index)] = \
-                    "第{row_index}行导入失败，原因：第AA列，设置零售的商品，必须填写正确的零售价格".format(row_index=row_index)
-                continue
         # *** END ***
 
         # *** 创建商品对象 ***
         # 根据商品货号进行查找，如果该商品已存在，则从数据库中取出，如果不存在则创建新商品
         product_set = Product.objects.filter(item_no__exact=row_data[3])
-        if product_set is None:
+        product_category = None
+        if len(product_set) == 0:
             # 获得创建商品用户
-            creator = None
-            user_set = User.objects.filter(id__extra=row_data[0])
-            if user_set:
+            user_set = User.objects.filter(id=row_data[0])
+            if len(user_set) > 0:
                 creator = user_set[0]
             else:
                 errors_dict["message" + str(row_index)] = \
@@ -288,7 +289,7 @@ def import_multi_products(filepath):
             first_category_name = row_data[4]
             second_category_name = row_data[5]
             third_category_name = row_data[6]
-            brand_name = row_data[7]
+            brand_id = row_data[7]
             place_delivery = row_data[8]
             is_id_needed = False
             if int(row_data[9]) == 1:
@@ -299,10 +300,7 @@ def import_multi_products(filepath):
                                    name=name,
                                    brief=brief,
                                    item_no=item_no,
-                                   first_category_name=first_category_name,
-                                   second_category_name=second_category_name,
-                                   third_category_name=third_category_name,
-                                   brand_name=brand_name,
+                                   brand_id=brand_id,
                                    place_delivery=place_delivery,
                                    is_id_needed=is_id_needed,
                                    desc=desc)
@@ -310,10 +308,15 @@ def import_multi_products(filepath):
                 errors_dict["message" + str(row_index)] = \
                     "第{row_index}行导入失败，原因：{error_message}".format(row_index=row_index, error_message=product)
                 continue
+            # *** 设置分类关系 ***
+            product_category = make_product_category(product,
+                                                     first_category_name=first_category_name,
+                                                     second_category_name=second_category_name,
+                                                     third_category_name=third_category_name)
         else:
             product = product_set[0]
 
-        # ***保存新规格***
+        # *** 保存新规格 ***
         items = {}
         if row_data[12] == '' and row_data[13] == '' and row_data[14] == '' and row_data[15] == '' and row_data[
             16] == '' and row_data[17] == '':
@@ -329,9 +332,9 @@ def import_multi_products(filepath):
             if row_data[16] != '' and row_data[17] != '':
                 items[row_data[16]] = row_data[17]
         spec_no = row_data[18]
-        if Spec.objects.filter(spec_no=spec_no):
+        if len(Spec.objects.filter(spec_no=spec_no)) > 0:
             errors_dict["message" + str(row_index)] = \
-                "第{row_index}行导入失败，原因：第S列，规格编码重复，请修正".format(row_index=row_index)
+                "第{row_index}行导入失败，原因：第S列，规格编码重复，请修正，不填则系统会自动分配一个唯一编码".format(row_index=row_index)
             continue
 
         spec = make_spec(product, items, spec_no)
@@ -339,8 +342,9 @@ def import_multi_products(filepath):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：{error_message}".format(row_index=row_index, error_message=spec)
             continue
+        # *** END ***
 
-        # 创建规格详情
+        # *** 创建规格详情 ***
         if row_data[10] is not None and row_data[10] != '':
             if is_number(row_data[10]):
                 min_order_quantity = int(row_data[10])
@@ -372,28 +376,40 @@ def import_multi_products(filepath):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第AE列，毛重必须为数字，且大于0，非必填".format(row_index=row_index)
             continue
-        gross_weight = float(row_data[30])
+        if is_empty(row_data[30]) is False:
+            gross_weight = float(row_data[30])
+        else:
+            gross_weight = 0
 
         if (is_empty(row_data[31]) is False and is_number(row_data[31]) is False) or (
                 is_number(row_data[31]) is True and float(row_data[31]) <= 0):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第AF列，长必须为数字，且大于0，非必填".format(row_index=row_index)
             continue
-        length = float(row_data[31])
+        if is_empty(row_data[31]) is False:
+            length = float(row_data[31])
+        else:
+            length = 0
 
         if (is_empty(row_data[32]) is False and is_number(row_data[32]) is False) or (
                 is_number(row_data[32]) is True and float(row_data[32]) <= 0):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第AG列，宽度必须为数字，且大于0，非必填".format(row_index=row_index)
             continue
-        width = float(row_data[32])
+        if is_empty(row_data[32]) is False:
+            width = float(row_data[32])
+        else:
+            width = 0
 
         if (is_empty(row_data[33]) is False and is_number(row_data[33]) is False) or (
                 is_number(row_data[33]) is True and float(row_data[33]) <= 0):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第AH列，高度必须为数字，且大于0，非必填".format(row_index=row_index)
             continue
-        height = float(row_data[33])
+        if is_empty(row_data[33]) is False:
+            height = float(row_data[33])
+        else:
+            height = 0
 
         sku = row_data[34]
         barcode = row_data[35]
@@ -421,7 +437,9 @@ def import_multi_products(filepath):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：{error_message}".format(row_index=row_index, error_message=spec_detail)
             continue
-        # 创建定价
+        # *** END ***
+
+        # *** 创建定价 ***
         if int(row_data[28]) == 1:
             is_free_shipping = True
         else:
@@ -446,8 +464,8 @@ def import_multi_products(filepath):
                 step_one_min = int(min_max_list[0])
                 step_one_max = int(min_max_list[1])
 
-        if is_number(row_data[21].strip()) is True and float(row_data[21].strip() > 0):
-            price_one = float(row_data[21].strip())
+        if is_number(str(row_data[21]).strip()) is True and float(str(row_data[21]).strip()) > 0:
+            price_one = float(str(row_data[21]).strip())
         else:
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：第V列，价格1数据有误".format(row_index=row_index)
@@ -462,8 +480,8 @@ def import_multi_products(filepath):
                     min_max_list[1].strip()) is True and int(min_max_list[1]) > int(min_max_list[0]):
                 step_two_min = int(min_max_list[0])
                 step_two_max = int(min_max_list[1])
-                if is_number(row_data[23].strip()) is True and float(row_data[23].strip() > 0):
-                    price_two = float(row_data[23].strip())
+                if is_number(str(row_data[23]).strip()) is True and float(str(row_data[23]).strip()) > 0:
+                    price_two = float(str(row_data[23]).strip())
                 else:
                     errors_dict["message" + str(row_index)] = \
                         "第{row_index}行导入失败，原因：第X列，价格2数据有误".format(row_index=row_index)
@@ -478,8 +496,8 @@ def import_multi_products(filepath):
                     min_max_list[1].strip()) is True and int(min_max_list[1]) > int(min_max_list[0]):
                 step_three_min = int(min_max_list[0])
                 step_three_max = int(min_max_list[1])
-                if is_number(row_data[25].strip()) is True and float(row_data[25].strip() > 0):
-                    price_three = float(row_data[25].strip())
+                if is_number(str(row_data[25]).strip()) is True and float(str(row_data[25]).strip()) > 0:
+                    price_three = float(str(row_data[25]).strip())
                 else:
                     errors_dict["message" + str(row_index)] = \
                         "第{row_index}行导入失败，原因：第Z列，价格3数据有误".format(row_index=row_index)
@@ -487,10 +505,10 @@ def import_multi_products(filepath):
 
         retail_price = 0
         suggest_retail_price = 0
-        if is_number(row_data[26].strip()) is True and float(row_data[26].strip() > 0):
-            retail_price = float(row_data[26].strip())
-        if is_number(row_data[27].strip()) is True and float(row_data[27].strip() > 0):
-            suggest_retail_price = float(row_data[27].strip())
+        if is_number(str(row_data[26]).strip()) is True and float(str(row_data[26]).strip()) > 0:
+            retail_price = float(str(row_data[26]).strip())
+        if is_number(str(row_data[27]).strip()) is True and float(str(row_data[27]).strip()) > 0:
+            suggest_retail_price = float(str(row_data[27]).strip())
 
         pricing = make_pricing(spec,
                                is_free_shipping=is_free_shipping,
@@ -511,8 +529,13 @@ def import_multi_products(filepath):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：{error_message}".format(row_index=row_index, error_message=pricing)
             continue
+        # *** END ***
 
-        # 创建销售方式
+        # *** 创建可售规格关系 ***
+        available_spec = make_available_spec(product.creator, spec)
+        # *** END ***
+
+        # *** 创建销售方式 ***
         is_wholesale = True if int(row_data[41]) == 1 else False
         is_retail = True if int(row_data[42]) == 1 else False
 
@@ -524,8 +547,13 @@ def import_multi_products(filepath):
             errors_dict["message" + str(row_index)] = \
                 "第{row_index}行导入失败，原因：{error_message}".format(row_index=row_index, error_message=product_sales_type)
             continue
+        # *** END ***
 
+
+        # *** 保存至数据库 ***
         product.save()
+        if product_category is not None:
+            product_category.save()
         spec.save()
         spec_detail.save()
         pricing.save()
@@ -533,6 +561,10 @@ def import_multi_products(filepath):
             pricing.tiered_pricing.save()
             for step_price in pricing.tiered_pricing.step_price:
                 step_price.save()
+        available_spec.save()
         product_sales_type.save()
+        # *** END ***
 
         time.sleep(0.05)
+
+        return errors_dict

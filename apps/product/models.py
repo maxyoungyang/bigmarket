@@ -68,7 +68,7 @@ class Product(BaseModel):
     creator = models.ForeignKey(User, verbose_name='创建用户', on_delete=models.CASCADE, default=1)
     brand = models.ForeignKey(Brand, verbose_name='品牌', blank=True, null=True,
                               on_delete=models.DO_NOTHING)
-    category = models.ManyToManyField(Category, verbose_name='所属分类', related_name='products')
+    # category = models.ManyToManyField(Category, verbose_name='所属分类', related_name='products')
     name = models.CharField(verbose_name='商品名称', max_length=80)
     item_no = models.CharField(verbose_name='货号', default='', max_length=30, blank=True, null=True)
     brief = models.CharField(verbose_name='商品简述', blank=True, null=True, max_length=160)
@@ -97,6 +97,22 @@ class Product(BaseModel):
         verbose_name = '商品'
         verbose_name_plural = verbose_name
         db_table = 't_products'
+        ordering = ('-sort', '-add_time')
+
+
+class ProductCategory(BaseModel):
+    product = models.ForeignKey(Product, verbose_name='关联商品',
+                                on_delete=models.DO_NOTHING, related_name='category_set')
+    category = models.ForeignKey(Category, verbose_name='关联分类',
+                                 on_delete=models.DO_NOTHING, related_name='product_set')
+
+    def __str__(self):
+        return self.product.name + ' - ' + self.category.name
+
+    class Meta:
+        verbose_name = '商品分类关系'
+        verbose_name_plural = verbose_name
+        db_table = 't_product_category'
         ordering = ('-sort', '-add_time')
 
 
