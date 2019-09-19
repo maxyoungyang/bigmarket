@@ -24,8 +24,8 @@ def is_number(content):
             return False
 
 
-def is_empty(cell_content):
-    if cell_content is not None and cell_content != '':
+def is_empty(content):
+    if content is not None and len(content) != 0:
         return False
     else:
         return True
