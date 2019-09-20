@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',  # 解决跨域问题的app组件，要导入包 django-cors-headers
     'crispy_forms',
+    'django_filters',  # 启动过滤器
     'xadmin.apps.XAdminConfig',
     # 以下为自定义app
     'apps.user.apps.UserConfig',
@@ -156,3 +157,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "medias")
 
 # 用户TOKEN的有效时间（秒）
 USER_TOKEN_DURATION = 7200
+
+# 配置分页, 如果再views类中定义，则不需要这个全局配置
+REST_FRAMEWORK = {
+    # 配置分页, 如果再views类中定义，则不需要这个全局配置
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'PAGE_SIZE': 10,
+
+    # 注册django-filter
+    'DEFAULT_FILTER_BACKENDS': (
+            'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}

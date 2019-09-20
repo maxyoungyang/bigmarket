@@ -5,9 +5,18 @@ import os
 from django.http import HttpResponse
 
 import xlrd
+from rest_framework import viewsets, mixins, filters
 from rest_framework.views import APIView
-from apps.product.models import Category
+from rest_framework.generics import ListAPIView, CreateAPIView
+from django_filters.rest_framework import DjangoFilterBackend
+
+from apps.product.filters import ProductFilter
+from apps.product.models import Category, Product
 from apps.product.utils import import_multi_products
+
+from bigmarket.paginations import CommenPagination
+
+from .serializers import ProductSerializer
 
 
 class InitialCategoryView(APIView):
@@ -70,3 +79,47 @@ class ImportProductsView(APIView):
     def get(self, request):
         import_multi_products('\\initial_data\\initial_products.xls')
         return HttpResponse(request)
+
+
+class ProductsListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    商品列表页
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    # 配置分页
+    pagination_class = CommenPagination
+
+    # 配置过滤器，过滤器适用于精确匹配的情况
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    # filter_fields = ('creator',)
+    filter_class = ProductFilter
+
+    """
+    配置需要搜索的字段
+    '^' Starts-with search.
+    '=' Exact matches.
+    '@' Full-text search. (Currently only supported Django's MySQL backend.)
+    '$' Regex search.
+    """
+    search_fields = ('name', 'brief', 'desc')
+
+    """
+    配置排序
+    """
+    ordering_fields = ['add_time', 'name', 'brand']
+
+    # def get_queryset(self):
+    #     creator_id = self.request.query_params.get('creator_id', 0)
+    #     queryset = Product.objects.all()
+    #     if creator_id != 0:
+    #         queryset = queryset.filter(creator=creator_id)
+    #     return queryset
+
+
+class ProductCreateView(CreateAPIView):
+    """
+    创建商品
+    """
+    pass

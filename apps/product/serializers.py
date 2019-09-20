@@ -1,12 +1,6 @@
 from rest_framework.serializers import ModelSerializer
-from .models import Product, ProductSalesType, Spec, SpecDetail,\
-    AvailableSpec, Brand, Category, InteractedProduct, InventoryHistory
-
-
-class PorductSerializer(ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
+from .models import Product, ProductSalesType, Spec, SpecDetail, \
+    AvailableSpec, Brand, Category, InteractedProduct, InventoryHistory, ProductCategory
 
 
 class ProductSalesTypeSerializer(ModelSerializer):
@@ -56,4 +50,16 @@ class InventoryHistorySerializer(ModelSerializer):
 
     class Meta:
         model = InventoryHistory
+        fields = '__all__'
+
+
+class ProductSerializer(ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class ProductCategorySerializer(ModelSerializer):
+    class Meta:
+        model = ProductCategory
         fields = '__all__'
