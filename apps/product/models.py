@@ -47,6 +47,8 @@ class Category(BaseModel):
                              max_length=200, null=True, blank=True)
     bg_color = models.CharField(verbose_name='分类背景色', blank=True, null=True, max_length=10)
     is_recommended = models.BooleanField(verbose_name='是否首页推荐', default=False)
+    is_tab = models.BooleanField(verbose_name='是否导航显示', default=False)
+    is_common = models.BooleanField(verbose_name='是否通用', default=False)
 
     class Meta:
         verbose_name = '商品分类'

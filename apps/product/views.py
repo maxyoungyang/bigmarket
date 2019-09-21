@@ -125,7 +125,7 @@ class ProductCreateView(CreateAPIView):
     pass
 
 
-class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class CategoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     商品分类列表数据
     """
