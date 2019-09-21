@@ -16,7 +16,7 @@ from apps.product.utils import import_multi_products
 
 from bigmarket.paginations import CommenPagination
 
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer, CategorySerializer
 
 
 class InitialCategoryView(APIView):
@@ -123,3 +123,12 @@ class ProductCreateView(CreateAPIView):
     创建商品
     """
     pass
+
+
+class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    商品分类列表数据
+    """
+    queryset = Category.objects.filter(level=1)
+    serializer_class = CategorySerializer
+

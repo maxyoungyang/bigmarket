@@ -37,7 +37,7 @@ class Brand(BaseModel):
 # 商品分类
 class Category(BaseModel):
     creator = models.ForeignKey(User, verbose_name='创建用户', null=True, blank=True, on_delete=models.DO_NOTHING)
-    parent = models.ForeignKey('self', verbose_name='父级分类',
+    parent = models.ForeignKey('self', verbose_name='父级分类', related_name='sub_categories',
                                on_delete=models.DO_NOTHING, db_column='pid', blank=True, null=True)
     level = models.PositiveIntegerField(verbose_name='分类等级', default=1)
     name = models.CharField(verbose_name='分类名称', max_length=30, default='')
@@ -68,7 +68,7 @@ class Product(BaseModel):
     creator = models.ForeignKey(User, verbose_name='创建用户', on_delete=models.CASCADE, default=1)
     brand = models.ForeignKey(Brand, verbose_name='品牌', blank=True, null=True,
                               on_delete=models.DO_NOTHING)
-    # category = models.ManyToManyField(Category, verbose_name='所属分类', related_name='products')
+    category = models.ForeignKey(Category, verbose_name='分类', blank=True, null=True, on_delete=models.DO_NOTHING)
     name = models.CharField(verbose_name='商品名称', max_length=80)
     item_no = models.CharField(verbose_name='货号', default='', max_length=30, blank=True, null=True)
     brief = models.CharField(verbose_name='商品简述', blank=True, null=True, max_length=160)
@@ -100,19 +100,20 @@ class Product(BaseModel):
         ordering = ('-sort', '-add_time')
 
 
-class ProductCategory(BaseModel):
-    product = models.ForeignKey(Product, verbose_name='关联商品',
-                                on_delete=models.DO_NOTHING, related_name='category_set')
+class BrandCategory(BaseModel):
+    brand = models.ForeignKey(Brand, verbose_name='关联品牌',
+                              on_delete=models.DO_NOTHING, related_name='category_set')
     category = models.ForeignKey(Category, verbose_name='关联分类',
-                                 on_delete=models.DO_NOTHING, related_name='product_set')
+                                 on_delete=models.DO_NOTHING, related_name='brand_set')
+    is_recommended = models.BooleanField('是否分类推荐', default=False)
 
     def __str__(self):
-        return self.product.name + ' - ' + self.category.name
+        return self.brand.name + ' - ' + self.category.name
 
     class Meta:
-        verbose_name = '商品分类关系'
+        verbose_name = '品牌分类关系'
         verbose_name_plural = verbose_name
-        db_table = 't_product_category'
+        db_table = 't_brand_category'
         ordering = ('-sort', '-add_time')
 
 
@@ -177,7 +178,7 @@ class InventoryHistory(BaseModel):
     creator = models.ForeignKey(User, verbose_name='引起库存变更的用户', on_delete=models.DO_NOTHING)
 
     def __str__(self):
-        return self.spec.product.name + ' - ' + str(self.spec.id) + ' - '\
+        return self.spec.product.name + ' - ' + str(self.spec.id) + ' - ' \
                + str(self.change) + ' - ' + str(self.current_inventory)
 
     class Meta:

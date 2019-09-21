@@ -10,8 +10,8 @@ from django.db import transaction
 
 from apps.logistics.models import Region
 from apps.pricing.utils import create_pricing
-from apps.product.models import Category, Product, Spec, Brand, SpecDetail, ProductSalesType, ProductCategory, \
-    AvailableSpec
+from apps.product.models import Category, Product, Spec, Brand, SpecDetail, ProductSalesType, \
+    AvailableSpec, BrandCategory
 from apps.user.models import User
 from bigmarket.commonutils import get_xls_table, is_empty, is_number
 from exception.custom_exception import ImportProductsException
@@ -61,6 +61,17 @@ def create_brand(user, name):
     return brand
 
 
+def set_brand_category(brand, category):
+    brand_category = BrandCategory()
+    if brand is not None and category is not None:
+        brand_category.brand = brand
+        brand_category.category = category
+        brand_category.save()
+        return brand_category
+    else:
+        return None
+
+
 def create_category(creator, parent_category, name):
     """
     创建分类
@@ -85,22 +96,14 @@ def create_category(creator, parent_category, name):
     return category
 
 
-def create_product_category(product,
-                            category=None,
-                            first_category_name='',
-                            second_category_name='',
-                            third_category_name=''):
+def set_product_category(product,
+                         category=None,
+                         first_category_name='',
+                         second_category_name='',
+                         third_category_name=''):
     """
-    创建商品-分类关系对象
-    :param product:
-    :param category:
-    :param first_category_name:
-    :param second_category_name:
-    :param third_category_name:
-    :return:
+    设置商品分类
     """
-    pc = ProductCategory()
-    pc.product = product
     if category is not None:
         pass
     else:
@@ -108,12 +111,12 @@ def create_product_category(product,
         if third_category_name is not None and third_category_name != '':  # 如果输入的商品三级分类名不是空字符串
             third_category_set = Category.objects.filter(name__exact=third_category_name)
             if len(third_category_set) > 0:  # 如果三级分类已存在
-                category = third_category_set[0]
+                product.category = third_category_set[0]
             else:
                 if second_category_name is not None and second_category_name != '':
                     second_category_set = Category.objects.filter(name__exact=second_category_name)
                     if len(second_category_set) > 0:  # 如果二级分类已存在，则创建新的三级分类，并将产品分类设置为这个新的三级分类
-                        category = create_category(product.creator, second_category_set[0], third_category_name)
+                        product.category = create_category(product.creator, second_category_set[0], third_category_name)
                     else:  # 如果二级分类不存在，则查看一级分类
                         if first_category_name is not None and first_category_name != '':
                             first_category_set = Category.objects.filter(name__exact=first_category_name)
@@ -121,12 +124,12 @@ def create_product_category(product,
                                 second_category = create_category(product.creator, first_category_set[0],
                                                                   second_category_name)
                                 third_category = create_category(product.creator, second_category, third_category_name)
-                                category = third_category
+                                product.category = third_category
                             else:
                                 first_category = create_category(product.creator, None, first_category_name)
                                 second_category = create_category(product.creator, first_category, second_category_name)
                                 third_category = create_category(product.creator, second_category, third_category_name)
-                                category = third_category
+                                product.category = third_category
                         else:
                             error_message = "商品分类必须完整填写三个等级的分类名称，不确定可以不填"
                             return error_message
@@ -134,33 +137,18 @@ def create_product_category(product,
                     error_message = "商品分类必须完整填写三个等级的分类名称，不确定可以不填"
                     return error_message
         else:
-            category = Category.objects.filter(id=999)[0]
-    pc.category = category
-    pc_exits_set = ProductCategory.objects.filter(product=product, category=category)
-    if len(pc_exits_set) > 0:
-        pc = pc_exits_set[0]
-    pc.sort = 0
-    pc.is_delete = False
-    pc.is_enable = True
-    pc.save()
-    return pc
+            product.category = Category.objects.filter(id=999)[0]
+    return product
 
 
 def create_product(creator, name='', brief='', item_no='',
                    brand_id=0, place_origin='', place_delivery='',
+                   first_category_name='',
+                   second_category_name='',
+                   third_category_name='',
                    is_id_needed=False, desc=''):
     """
     创建商品
-    :param creator:
-    :param name:
-    :param brief:
-    :param item_no:
-    :param brand_id:
-    :param place_origin:
-    :param place_delivery:
-    :param is_id_needed:
-    :param desc:
-    :return:
     """
     # 商品名称
     if name is None or name == '':
@@ -211,6 +199,14 @@ def create_product(creator, name='', brief='', item_no='',
     else:
         error_message = "商品品牌ID填写错误，可能原因：非数字、不是整数、负数或0，请确认"
         return error_message
+
+    # *** 设置分类关系 ***
+    product = set_product_category(product,
+                                   first_category_name=first_category_name,
+                                   second_category_name=second_category_name,
+                                   third_category_name=third_category_name)
+    if type(set_product_category) == str:
+        return set_product_category
 
     # 设置原产地和发货地
     if len(Region.objects.filter(name=place_origin)) > 0:
@@ -351,7 +347,7 @@ def import_multi_products(filepath):
                         "第{row_index}行导入失败，原因：第B列，标题名称为必填项，未填写".format(row_index=row_index)
                     raise ImportProductsException()
                 if is_number(row_data[9]) is False or (float(row_data[9]) != 0 and float(row_data[9]) != 1):
-                    error_message = "第{row_index}行导入失败，原因：第G列，必填且只能填写0或者1,0代表不需要，1代表需要"\
+                    error_message = "第{row_index}行导入失败，原因：第G列，必填且只能填写0或者1,0代表不需要，1代表需要" \
                         .format(row_index=row_index)
                     raise ImportProductsException()
                 if row_data[19] is None or row_data[19] == '' or row_data[19].strip().upper() not in \
@@ -387,6 +383,9 @@ def import_multi_products(filepath):
                     name = row_data[1]
                     brief = row_data[2]
                     item_no = row_data[3]
+                    first_category_name = row_data[4]
+                    second_category_name = row_data[5]
+                    third_category_name = row_data[6]
                     brand_id = row_data[7]
                     place_delivery = row_data[8]
                     is_id_needed = False
@@ -398,30 +397,19 @@ def import_multi_products(filepath):
                                              name=name,
                                              brief=brief,
                                              item_no=item_no,
+                                             first_category_name=first_category_name,
+                                             second_category_name=second_category_name,
+                                             third_category_name=third_category_name,
                                              brand_id=brand_id,
                                              place_delivery=place_delivery,
                                              is_id_needed=is_id_needed,
                                              desc=desc)
                     if type(product) == str:
-                        error_message = "第{row_index}行导入失败，原因：{error_message}"\
+                        error_message = "第{row_index}行导入失败，原因：{error_message}" \
                             .format(row_index=row_index, error_message=product)
                         raise ImportProductsException()
                 else:
                     product = product_set[0]
-                # *** END ***
-
-                # *** 设置分类关系 ***
-                first_category_name = row_data[4]
-                second_category_name = row_data[5]
-                third_category_name = row_data[6]
-                product_category = create_product_category(product,
-                                                           first_category_name=first_category_name,
-                                                           second_category_name=second_category_name,
-                                                           third_category_name=third_category_name)
-                if type(product_category) == str:
-                    error_message = "第{row_index}行导入失败，原因：{error_message}" \
-                        .format(row_index=row_index, error_message=product_category)
-                    raise ImportProductsException()
                 # *** END ***
 
                 # *** 保存新规格 ***

@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from .models import Product, ProductSalesType, Spec, SpecDetail, \
-    AvailableSpec, Brand, Category, InteractedProduct, InventoryHistory, ProductCategory
+    AvailableSpec, Brand, Category, InteractedProduct, InventoryHistory, BrandCategory
 
 
 class ProductSalesTypeSerializer(ModelSerializer):
@@ -33,7 +33,21 @@ class BrandSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class SubCategorySerializer3(ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class SubCategorySerializer2(ModelSerializer):
+    sub_categories = SubCategorySerializer3(many=True)
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
 class CategorySerializer(ModelSerializer):
+    sub_categories = SubCategorySerializer2(many=True)
     class Meta:
         model = Category
         fields = '__all__'
@@ -59,7 +73,7 @@ class ProductSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class ProductCategorySerializer(ModelSerializer):
+class BrandCategorySerializer(ModelSerializer):
     class Meta:
-        model = ProductCategory
+        model = BrandCategory
         fields = '__all__'

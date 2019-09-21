@@ -27,11 +27,12 @@ from apps.product.views import InitialCategoryView, ImportProductsView
 
 from bigmarket.settings import MEDIA_ROOT
 
-from apps.product.views import ProductsListViewSet
+from apps.product.views import ProductsListViewSet, CategoryViewSet
 
 router = DefaultRouter()
 # 通过配置url
 router.register(r'product/list', ProductsListViewSet, basename='Product')  # 在view重载get_queryset函数时，必须设置basename属性
+router.register(r'categories', CategoryViewSet, basename='Category')
 
 urlpatterns = [
     #    path('admin/', admin.site.urls),
